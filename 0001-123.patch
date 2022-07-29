@@ -1,0 +1,583 @@
+From 1620a7cf0e059cec4e705fb9a1a076734c767fe9 Mon Sep 17 00:00:00 2001
+From: Bryant Cheng <great770203@gmail.com>
+Date: Fri, 29 Jul 2022 12:01:03 +0800
+Subject: [PATCH] '123'
+
+---
+ app/build.gradle                              |   9 +-
+ app/src/main/AndroidManifest.xml              |   9 +-
+ .../bryant/itunesmusicsearch/FirstFragment.kt |  12 +-
+ .../bryant/itunesmusicsearch/MainActivity.kt  |  41 +------
+ .../itunesmusicsearch/MainApplication.kt      |  23 ++++
+ .../itunesmusicsearch/PlayerFragment.kt       | 107 ++++++++++++++++++
+ .../bryant/itunesmusicsearch/data/Player.kt   |  12 ++
+ .../extensions/Extensions.kt                  |   7 ++
+ .../itunesmusicsearch/log/MultiTagTree.kt     |   8 ++
+ app/src/main/res/layout/activity_main.xml     |  47 ++++----
+ app/src/main/res/layout/content_main.xml      |   3 +-
+ app/src/main/res/layout/fragment_player.xml   |  57 ++++++++++
+ app/src/main/res/navigation/nav_graph.xml     |  15 +++
+ app/src/main/res/values/strings.xml           |   1 +
+ build.gradle                                  |   9 ++
+ 15 files changed, 290 insertions(+), 70 deletions(-)
+ create mode 100644 app/src/main/java/com/bryant/itunesmusicsearch/MainApplication.kt
+ create mode 100644 app/src/main/java/com/bryant/itunesmusicsearch/PlayerFragment.kt
+ create mode 100644 app/src/main/java/com/bryant/itunesmusicsearch/data/Player.kt
+ create mode 100644 app/src/main/java/com/bryant/itunesmusicsearch/extensions/Extensions.kt
+ create mode 100644 app/src/main/java/com/bryant/itunesmusicsearch/log/MultiTagTree.kt
+ create mode 100644 app/src/main/res/layout/fragment_player.xml
+
+diff --git a/app/build.gradle b/app/build.gradle
+index 0389ab6..2da3d8f 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -1,6 +1,8 @@
+ plugins {
+     id 'com.android.application'
+     id 'org.jetbrains.kotlin.android'
++    id 'kotlin-parcelize'
++    id 'androidx.navigation.safeargs.kotlin'
+ }
+ 
+ android {
+@@ -35,13 +37,16 @@ android {
+ }
+ 
+ dependencies {
+-
+-    implementation 'androidx.core:core-ktx:1.7.0'
++    implementation 'com.google.android.exoplayer:exoplayer:2.18.1'
++    implementation 'androidx.core:core-ktx:1.8.0'
+     implementation 'androidx.appcompat:appcompat:1.4.2'
+     implementation 'com.google.android.material:material:1.6.1'
+     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
++    implementation 'androidx.navigation:navigation-runtime-ktx:2.5.0'
+     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.0'
+     implementation 'androidx.navigation:navigation-ui-ktx:2.5.0'
++    implementation 'com.jakewharton.timber:timber:5.0.1'
++    implementation 'com.github.bumptech.glide:glide:4.13.2'
+     testImplementation 'junit:junit:4.13.2'
+     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 9167686..5e6b3a7 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -3,11 +3,12 @@
+     xmlns:tools="http://schemas.android.com/tools"
+     package="com.bryant.itunesmusicsearch">
+ 
+-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+-    <uses-permission android:name="android.permission.INTERNET"/>
++    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++    <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+ 
+     <application
++        android:name=".MainApplication"
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+         android:fullBackupContent="@xml/backup_rules"
+@@ -19,9 +20,7 @@
+         tools:targetApi="31">
+         <activity
+             android:name=".MainActivity"
+-            android:exported="true"
+-            android:label="@string/app_name"
+-            android:theme="@style/Theme.ItunesMusicSearch.NoActionBar">
++            android:exported="true">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN" />
+ 
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/FirstFragment.kt b/app/src/main/java/com/bryant/itunesmusicsearch/FirstFragment.kt
+index a734fe3..352b647 100644
+--- a/app/src/main/java/com/bryant/itunesmusicsearch/FirstFragment.kt
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/FirstFragment.kt
+@@ -1,11 +1,12 @@
+ package com.bryant.itunesmusicsearch
+ 
+ import android.os.Bundle
+-import androidx.fragment.app.Fragment
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
++import androidx.fragment.app.Fragment
+ import androidx.navigation.fragment.findNavController
++import com.bryant.itunesmusicsearch.data.Player
+ import com.bryant.itunesmusicsearch.databinding.FragmentFirstBinding
+ 
+ /**
+@@ -33,7 +34,14 @@ class FirstFragment : Fragment() {
+         super.onViewCreated(view, savedInstanceState)
+ 
+         binding.buttonFirst.setOnClickListener {
+-            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
++//            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
++            val player = Player(
++                "https://is3-ssl.mzstatic.com/image/thumb/Music125/v4/79/1e/dc/791edcf0-73ab-96e7-b6c4-29943a79c14c/14UMGIM27067.rgb.jpg/100x100bb.jpg",
++                "Moves Like Jaggerasdauibvqwrevuwqriovrwmqiovmqwivomqwjvrqwmvqwrjiovjqwvioqwrrv (feat. Christina Aguilera)",
++                "Maroon 5",
++                "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/12/d3/24/12d3248d-8b3b-53fd-1249-3bfb1834d0a0/mzaf_17675713238865539816.plus.aac.p.m4a"
++            )
++            findNavController().navigate(FirstFragmentDirections.actionFirstFragmentToPlayerFragment(player))
+         }
+     }
+ 
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/MainActivity.kt b/app/src/main/java/com/bryant/itunesmusicsearch/MainActivity.kt
+index 58a02a4..5c733f2 100644
+--- a/app/src/main/java/com/bryant/itunesmusicsearch/MainActivity.kt
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/MainActivity.kt
+@@ -9,50 +9,21 @@ import androidx.navigation.ui.navigateUp
+ import androidx.navigation.ui.setupActionBarWithNavController
+ import android.view.Menu
+ import android.view.MenuItem
++import androidx.navigation.fragment.NavHostFragment
+ import com.bryant.itunesmusicsearch.databinding.ActivityMainBinding
++import timber.log.Timber
+ 
+ class MainActivity : AppCompatActivity() {
+ 
+-    private lateinit var appBarConfiguration: AppBarConfiguration
+     private lateinit var binding: ActivityMainBinding
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+-
+         binding = ActivityMainBinding.inflate(layoutInflater)
+         setContentView(binding.root)
+-
+-        setSupportActionBar(binding.toolbar)
+-
+-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+-        appBarConfiguration = AppBarConfiguration(navController.graph)
+-        setupActionBarWithNavController(navController, appBarConfiguration)
+-
+-        binding.fab.setOnClickListener { view ->
+-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+-                .setAction("Action", null).show()
+-        }
+-    }
+-
+-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+-        // Inflate the menu; this adds items to the action bar if it is present.
+-        menuInflater.inflate(R.menu.menu_main, menu)
+-        return true
+-    }
+-
+-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+-        // Handle action bar item clicks here. The action bar will
+-        // automatically handle clicks on the Home/Up button, so long
+-        // as you specify a parent activity in AndroidManifest.xml.
+-        return when (item.itemId) {
+-            R.id.action_settings -> true
+-            else -> super.onOptionsItemSelected(item)
+-        }
+-    }
+-
+-    override fun onSupportNavigateUp(): Boolean {
+-        val navController = findNavController(R.id.nav_host_fragment_content_main)
+-        return navController.navigateUp(appBarConfiguration)
+-                || super.onSupportNavigateUp()
++        val navHostFragment: NavHostFragment = supportFragmentManager
++            .findFragmentById(R.id.nav_host_fragment_content_main) as NavHostFragment? ?: return
++        val navController = navHostFragment.navController
++        AppBarConfiguration(navController.graph)
+     }
+ }
+\ No newline at end of file
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/MainApplication.kt b/app/src/main/java/com/bryant/itunesmusicsearch/MainApplication.kt
+new file mode 100644
+index 0000000..079db3f
+--- /dev/null
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/MainApplication.kt
+@@ -0,0 +1,23 @@
++package com.bryant.itunesmusicsearch
++
++import android.app.Application
++import android.content.Context
++import com.bryant.itunesmusicsearch.log.MultiTagTree
++import timber.log.Timber
++
++class MainApplication : Application() {
++    override fun onCreate() {
++        super.onCreate()
++        instance = this
++        if (BuildConfig.DEBUG) {
++            Timber.plant(MultiTagTree())
++        }
++    }
++
++    companion object {
++        private lateinit var instance: Application
++        fun getContext(): Context {
++            return instance.applicationContext
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/PlayerFragment.kt b/app/src/main/java/com/bryant/itunesmusicsearch/PlayerFragment.kt
+new file mode 100644
+index 0000000..345009d
+--- /dev/null
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/PlayerFragment.kt
+@@ -0,0 +1,107 @@
++package com.bryant.itunesmusicsearch
++
++import android.os.Bundle
++import android.view.LayoutInflater
++import android.view.View
++import android.view.ViewGroup
++import androidx.fragment.app.Fragment
++import com.bryant.itunesmusicsearch.data.Player
++import com.bryant.itunesmusicsearch.databinding.FragmentPlayerBinding
++import com.bryant.itunesmusicsearch.extensions.ApplicationContext
++import com.bumptech.glide.Glide
++import com.google.android.exoplayer2.ExoPlayer
++import com.google.android.exoplayer2.MediaItem
++import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
++import com.google.android.exoplayer2.source.ProgressiveMediaSource
++import com.google.android.exoplayer2.upstream.DataSource
++import com.google.android.exoplayer2.upstream.DefaultDataSource
++import com.google.android.exoplayer2.util.Util
++
++class PlayerFragment : Fragment() {
++
++    private var _binding: FragmentPlayerBinding? = null
++    private val binding get() = _binding!!
++
++    private var player: Player? = null
++    private var exoPlayer: ExoPlayer? = null
++
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        arguments?.let {
++            player = PlayerFragmentArgs.fromBundle(it).player
++        }
++    }
++
++    override fun onCreateView(
++        inflater: LayoutInflater, container: ViewGroup?,
++        savedInstanceState: Bundle?
++    ): View {
++        // Inflate the layout for this fragment
++        _binding = FragmentPlayerBinding.inflate(inflater, container, false)
++
++        setViews()
++
++        return binding.root
++    }
++
++    private fun setViews() {
++        player?.let { data ->
++            Glide.with(ApplicationContext).load(data.imageUrl).into(binding.ivCover)
++            binding.tvTrackName.text = data.trackName
++            binding.tvArtistName.text = data.artistName
++        }
++    }
++
++
++    private fun initPlayer() {
++        player?.previewUrl?.let { url ->
++            val mediaDataSourceFactory: DataSource.Factory =
++                DefaultDataSource.Factory(ApplicationContext)
++
++            val mediaSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory)
++                .createMediaSource(MediaItem.fromUri(url))
++
++            val mediaSourceFactory = DefaultMediaSourceFactory(mediaDataSourceFactory)
++
++            exoPlayer = ExoPlayer.Builder(ApplicationContext)
++                .setMediaSourceFactory(mediaSourceFactory)
++                .build()
++
++            exoPlayer?.run {
++                addMediaSource(mediaSource)
++                prepare()
++                playWhenReady = true
++            }
++        }
++    }
++
++    private fun releasePlayer() {
++        exoPlayer?.release()
++    }
++
++    override fun onStart() {
++        super.onStart()
++        if (Util.SDK_INT > 23) initPlayer()
++    }
++
++    override fun onResume() {
++        super.onResume()
++        if (Util.SDK_INT <= 23) initPlayer()
++    }
++
++    override fun onPause() {
++        super.onPause()
++        if (Util.SDK_INT <= 23) releasePlayer()
++    }
++
++    override fun onStop() {
++        super.onStop()
++        if (Util.SDK_INT > 23) releasePlayer()
++    }
++
++    override fun onDestroyView() {
++        super.onDestroyView()
++        _binding = null
++    }
++}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/data/Player.kt b/app/src/main/java/com/bryant/itunesmusicsearch/data/Player.kt
+new file mode 100644
+index 0000000..b8ee678
+--- /dev/null
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/data/Player.kt
+@@ -0,0 +1,12 @@
++package com.bryant.itunesmusicsearch.data
++
++import android.os.Parcelable
++import kotlinx.android.parcel.Parcelize
++
++@Parcelize
++data class Player(
++    val imageUrl: String?,
++    val trackName: String?,
++    val artistName: String?,
++    val previewUrl: String?
++) : Parcelable
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/extensions/Extensions.kt b/app/src/main/java/com/bryant/itunesmusicsearch/extensions/Extensions.kt
+new file mode 100644
+index 0000000..99628e2
+--- /dev/null
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/extensions/Extensions.kt
+@@ -0,0 +1,7 @@
++package com.bryant.itunesmusicsearch.extensions
++
++import android.content.Context
++import com.bryant.itunesmusicsearch.MainApplication
++
++val Any.ApplicationContext: Context
++    get() = MainApplication.getContext()
+\ No newline at end of file
+diff --git a/app/src/main/java/com/bryant/itunesmusicsearch/log/MultiTagTree.kt b/app/src/main/java/com/bryant/itunesmusicsearch/log/MultiTagTree.kt
+new file mode 100644
+index 0000000..f87f20f
+--- /dev/null
++++ b/app/src/main/java/com/bryant/itunesmusicsearch/log/MultiTagTree.kt
+@@ -0,0 +1,8 @@
++package com.bryant.itunesmusicsearch.log
++
++import timber.log.Timber
++
++class MultiTagTree : Timber.DebugTree() {
++    override fun createStackElementTag(element: StackTraceElement) =
++        "Bryant-(${element.fileName}:${element.lineNumber})#${element.methodName}"
++}
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+index 531ad56..7e70ffa 100644
+--- a/app/src/main/res/layout/activity_main.xml
++++ b/app/src/main/res/layout/activity_main.xml
+@@ -1,34 +1,33 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
+     tools:context=".MainActivity">
+ 
+-    <com.google.android.material.appbar.AppBarLayout
++    <androidx.appcompat.widget.SearchView
++        android:id="@+id/searchView"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+-        android:theme="@style/Theme.ItunesMusicSearch.AppBarOverlay">
++        app:iconifiedByDefault="false"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.5"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent"
++        app:queryHint="@string/search_hint"
++        app:searchHintIcon="@null"
++        app:searchIcon="@null" />
+ 
+-        <androidx.appcompat.widget.Toolbar
+-            android:id="@+id/toolbar"
+-            android:layout_width="match_parent"
+-            android:layout_height="?attr/actionBarSize"
+-            android:background="?attr/colorPrimary"
+-            app:popupTheme="@style/Theme.ItunesMusicSearch.PopupOverlay" />
+-
+-    </com.google.android.material.appbar.AppBarLayout>
+-
+-    <include layout="@layout/content_main" />
+-
+-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+-        android:id="@+id/fab"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:layout_gravity="bottom|end"
+-        android:layout_marginEnd="@dimen/fab_margin"
+-        android:layout_marginBottom="16dp"
+-        app:srcCompat="@android:drawable/ic_dialog_email" />
+-
+-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+\ No newline at end of file
++    <androidx.fragment.app.FragmentContainerView
++        android:id="@+id/nav_host_fragment_content_main"
++        android:name="androidx.navigation.fragment.NavHostFragment"
++        android:layout_width="0dp"
++        android:layout_height="0dp"
++        app:defaultNavHost="true"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@+id/searchView"
++        app:navGraph="@navigation/nav_graph" />
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/content_main.xml b/app/src/main/res/layout/content_main.xml
+index e416e1c..2ece1dc 100644
+--- a/app/src/main/res/layout/content_main.xml
++++ b/app/src/main/res/layout/content_main.xml
+@@ -2,8 +2,7 @@
+ <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    app:layout_behavior="@string/appbar_scrolling_view_behavior">
++    android:layout_height="match_parent">
+ 
+     <fragment
+         android:id="@+id/nav_host_fragment_content_main"
+diff --git a/app/src/main/res/layout/fragment_player.xml b/app/src/main/res/layout/fragment_player.xml
+new file mode 100644
+index 0000000..3d38b75
+--- /dev/null
++++ b/app/src/main/res/layout/fragment_player.xml
+@@ -0,0 +1,57 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:background="@android:color/black"
++    android:focusable="true"
++    android:keepScreenOn="true"
++    tools:context=".PlayerFragment">
++
++    <ImageView
++        android:id="@+id/iv_cover"
++        android:layout_width="200dp"
++        android:layout_height="200dp"
++        android:layout_marginTop="50dp"
++        android:contentDescription="The cover of this album"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.5"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toTopOf="parent"
++        tools:src="@tools:sample/avatars" />
++
++    <TextView
++        android:id="@+id/tv_track_name"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_marginTop="30dp"
++        android:ellipsize="end"
++        android:gravity="center"
++        android:maxLines="2"
++        android:paddingStart="15dp"
++        android:paddingEnd="15dp"
++        android:textColor="@android:color/white"
++        android:textSize="24sp"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.5"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@+id/iv_cover" />
++
++    <TextView
++        android:id="@+id/tv_artist_name"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_marginTop="20dp"
++        android:ellipsize="end"
++        android:gravity="center"
++        android:maxLines="1"
++        android:paddingStart="15dp"
++        android:paddingEnd="15dp"
++        android:textColor="@android:color/darker_gray"
++        android:textSize="20sp"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintHorizontal_bias="0.5"
++        app:layout_constraintStart_toStartOf="parent"
++        app:layout_constraintTop_toBottomOf="@+id/tv_track_name" />
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff --git a/app/src/main/res/navigation/nav_graph.xml b/app/src/main/res/navigation/nav_graph.xml
+index b5febcb..7a05f8e 100644
+--- a/app/src/main/res/navigation/nav_graph.xml
++++ b/app/src/main/res/navigation/nav_graph.xml
+@@ -14,6 +14,9 @@
+         <action
+             android:id="@+id/action_FirstFragment_to_SecondFragment"
+             app:destination="@id/SecondFragment" />
++        <action
++            android:id="@+id/action_FirstFragment_to_PlayerFragment"
++            app:destination="@id/PlayerFragment" />
+     </fragment>
+     <fragment
+         android:id="@+id/SecondFragment"
+@@ -25,4 +28,16 @@
+             android:id="@+id/action_SecondFragment_to_FirstFragment"
+             app:destination="@id/FirstFragment" />
+     </fragment>
++    <fragment
++        android:id="@+id/PlayerFragment"
++        android:name="com.bryant.itunesmusicsearch.PlayerFragment"
++        android:label="fragment_player"
++        tools:layout="@layout/fragment_player">
++
++        <argument
++            android:name="player"
++            android:defaultValue="@null"
++            app:argType="com.bryant.itunesmusicsearch.data.Player"
++            app:nullable="true" />
++    </fragment>
+ </navigation>
+\ No newline at end of file
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index dc62e7a..eda79bb 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -9,4 +9,5 @@
+ 
+     <string name="hello_first_fragment">Hello first fragment</string>
+     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
++    <string name="search_hint">Artist, song, or album</string>
+ </resources>
+\ No newline at end of file
+diff --git a/build.gradle b/build.gradle
+index 05c9aeb..b4732f2 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -1,3 +1,12 @@
++buildscript {
++    repositories {
++        google()
++    }
++    dependencies {
++        classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.5.0")
++    }
++}
++
+ // Top-level build file where you can add configuration options common to all sub-projects/modules.
+ plugins {
+     id 'com.android.application' version '7.2.0' apply false
+-- 
+2.26.2.windows.1
+
