@@ -3,9 +3,8 @@ package com.bryant.itunesmusicsearch.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bryant.itunesmusicsearch.data.HistoryInfo
-import com.bryant.itunesmusicsearch.data.HistoryInfoItem
 import com.bryant.itunesmusicsearch.databinding.HistoryItemBinding
+import com.bryant.itunesmusicsearch.db.History
 import timber.log.Timber
 
 interface OnHistoryItemClickListener {
@@ -15,7 +14,7 @@ interface OnHistoryItemClickListener {
 class HistoryAdapter(private val clickListener: OnHistoryItemClickListener) :
     RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
-    var historyList = HistoryInfo()
+    var historyList: List<History> = arrayListOf()
 
     class HistoryViewHolder(
         private val binding: HistoryItemBinding,
@@ -23,7 +22,7 @@ class HistoryAdapter(private val clickListener: OnHistoryItemClickListener) :
     ) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(infoItem: HistoryInfoItem) {
+        fun bind(infoItem: History) {
             infoItem.apply {
                 binding.tvKeyword.text = keyword
                 binding.root.setOnClickListener {

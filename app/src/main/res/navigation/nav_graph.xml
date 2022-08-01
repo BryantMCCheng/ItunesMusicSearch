@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/SearchFragment"
         android:name="com.bryant.itunesmusicsearch.ui.SearchFragment"
-        android:label="@string/first_fragment_label"
+        android:label="@string/search_fragment_label"
         tools:layout="@layout/fragment_search">
 
         <action
@@ -18,7 +18,7 @@
     <fragment
         android:id="@+id/PlayerFragment"
         android:name="com.bryant.itunesmusicsearch.ui.PlayerFragment"
-        android:label="fragment_player"
+        android:label="@string/player_fragment_label"
         tools:layout="@layout/fragment_player">
 
         <argument
