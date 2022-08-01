@@ -3,26 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/SearchFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.bryant.itunesmusicsearch.FirstFragment"
+        android:id="@+id/SearchFragment"
+        android:name="com.bryant.itunesmusicsearch.ui.SearchFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_search">
 
         <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
+            android:id="@+id/goPlayer"
+            app:destination="@id/PlayerFragment" />
     </fragment>
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.bryant.itunesmusicsearch.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        android:id="@+id/PlayerFragment"
+        android:name="com.bryant.itunesmusicsearch.ui.PlayerFragment"
+        android:label="fragment_player"
+        tools:layout="@layout/fragment_player">
 
-        <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+        <argument
+            android:name="player"
+            android:defaultValue="@null"
+            app:argType="com.bryant.itunesmusicsearch.data.Player"
+            app:nullable="true" />
     </fragment>
 </navigation>
