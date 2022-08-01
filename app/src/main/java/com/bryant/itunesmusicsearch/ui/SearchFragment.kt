@@ -97,14 +97,8 @@ class SearchFragment : Fragment(), MenuProvider {
         searchView = searchItem.actionView as SearchView
         searchView.apply {
             setOnQueryTextFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-//                    musicViewModel.getHistory()
-                    binding.rvHistory.visibility = View.VISIBLE
-                    binding.rvResult.visibility = View.GONE
-                } else {
-                    binding.rvHistory.visibility = View.GONE
-                    binding.rvResult.visibility = View.VISIBLE
-                }
+                binding.rvHistory.visibility = if (hasFocus) View.VISIBLE else View.GONE
+                binding.rvResult.visibility = if (hasFocus) View.GONE else View.VISIBLE
             }
 
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {

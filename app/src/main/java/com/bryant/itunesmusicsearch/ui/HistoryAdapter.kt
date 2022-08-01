@@ -15,6 +15,10 @@ class HistoryAdapter(private val clickListener: OnHistoryItemClickListener) :
     RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() {
 
     var historyList: List<History> = arrayListOf()
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
 
     class HistoryViewHolder(
         private val binding: HistoryItemBinding,
