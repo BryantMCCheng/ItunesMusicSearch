@@ -20,7 +20,7 @@ object RetrofitService {
             .build()
     }
 
-    val searchApi: SearchInfoDao by lazy {
-        retrofit().create(SearchInfoDao::class.java)
+    val searchApi: SearchApi by lazy {
+        retrofit().create(SearchApi::class.java)
     }
 }

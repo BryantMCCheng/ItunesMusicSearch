@@ -25,7 +25,6 @@ class PlayerFragment : Fragment() {
     private var player: Player? = null
     private var exoPlayer: ExoPlayer? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -52,7 +51,6 @@ class PlayerFragment : Fragment() {
             binding.tvArtistName.text = data.artistName
         }
     }
-
 
     private fun initPlayer() {
         player?.previewUrl?.let { url ->

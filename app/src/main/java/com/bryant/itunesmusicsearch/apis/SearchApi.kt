@@ -6,7 +6,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface SearchInfoDao {
+interface SearchApi {
     @GET(SEARCH)
     suspend fun getSearchInfo(
         @Query(

@@ -7,8 +7,17 @@ import com.bryant.itunesmusicsearch.db.HistoryRoomDataBase
 import kotlinx.coroutines.flow.Flow
 
 object DataRepository {
+
+    private val searchApi by lazy {
+        RetrofitService.searchApi
+    }
+
+    private val dbManager by lazy {
+        HistoryRoomDataBase.getInstance()
+    }
+
     suspend fun getSearchInfo(input: String): List<ResultsItem> {
-        val result = RetrofitService.searchApi.getSearchInfo(input)
+        val result = searchApi.getSearchInfo(input)
         return if (result.isSuccessful) {
             result.body()?.results ?: emptyList()
         } else {
@@ -17,6 +26,10 @@ object DataRepository {
     }
 
     fun getHistoryInfo(): Flow<List<History>> {
-        return HistoryRoomDataBase.getInstance().historyDao().getHistory()
+        return dbManager.historyDao().getHistory()
+    }
+
+    suspend fun saveHistory(keyword: String) {
+        dbManager.historyDao().insertHistory(History(keyword))
     }
 }
