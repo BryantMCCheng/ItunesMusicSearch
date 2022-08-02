@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch
+package com.bryant.itunesmusicsearch.utils
 
 import android.content.Context
 import android.net.ConnectivityManager

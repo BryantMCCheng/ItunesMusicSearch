@@ -8,25 +8,59 @@ import androidx.lifecycle.viewModelScope
 import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.data.ResultsItem
 import com.bryant.itunesmusicsearch.db.History
-import kotlinx.coroutines.launch
+import com.bryant.itunesmusicsearch.extensions.safeLaunch
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
     private var _searchResult = MutableLiveData<List<ResultsItem>>()
-    val searchResult: LiveData<List<ResultsItem>>
-        get() = _searchResult
+    val searchResult: LiveData<List<ResultsItem>> get() = _searchResult
 
     private var _historyList = repository.getHistoryInfo().asLiveData()
-    val historyList: LiveData<List<History>>
-        get() = _historyList
+    val historyList: LiveData<List<History>> get() = _historyList
+
+    private var _loading = MutableLiveData<Boolean>()
+    val loading: LiveData<Boolean> get() = _loading
+
+    private var _errorMessage = MutableLiveData<String>()
+    val errorMessage: LiveData<String> get() = _errorMessage
+
+    var job: Job? = null
 
     fun getSearchResult(input: String) {
-        viewModelScope.launch {
-            val result = repository.getSearchInfo(input)
+        job = viewModelScope.safeLaunch(exceptionHandler) {
+            withContext(Dispatchers.Main) {
+                _loading.value = true
+            }
+            val response = repository.getSearchInfo(input)
             repository.saveHistory(input)
-            if (result.isNotEmpty()) {
-                _searchResult.postValue(result)
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    _searchResult.postValue(response.body()?.results)
+                    _loading.value = false
+                } else {
+                    onError("Error : ${response.message()} ")
+                }
             }
         }
+    }
+
+    private fun onError(message: String) {
+        _errorMessage.value = message
+        _loading.value = false
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Timber.e("onCleared")
+        job?.cancel()
+    }
+
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        onError("Exception handled: ${throwable.localizedMessage}")
     }
 }
