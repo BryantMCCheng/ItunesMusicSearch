@@ -14,6 +14,7 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.R
@@ -31,7 +32,9 @@ class SearchFragment : Fragment(), MenuProvider {
     private val binding get() = _binding!!
     private lateinit var searchView: SearchView
 
-    private val musicViewModel = MusicViewModel(DataRepository)
+    private val musicViewModel by lazy {
+        ViewModelProvider(this, MusicViewModel.Factory(DataRepository))[MusicViewModel::class.java]
+    }
     private val loading by lazy {
         LoadingDialogFragment.newInstance()
     }

@@ -3,6 +3,7 @@ package com.bryant.itunesmusicsearch.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.bryant.itunesmusicsearch.DataRepository
@@ -62,5 +63,18 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         onError("Exception handled: ${throwable.localizedMessage}")
+    }
+
+    /**
+     * Factory for constructing MusicViewModel with parameter
+     */
+    class Factory(private val repository: DataRepository) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(MusicViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return MusicViewModel(repository) as T
+            }
+            throw IllegalArgumentException("Unable to construct viewmodel")
+        }
     }
 }
