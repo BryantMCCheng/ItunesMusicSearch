@@ -41,7 +41,7 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
             repository.saveHistory(input)
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
-                    _searchResult.postValue(response.body()?.results)
+                    _searchResult.value = response.body()?.results
                     _loading.value = false
                 } else {
                     onError("Error : ${response.message()} ")
