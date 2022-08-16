@@ -2,7 +2,6 @@ package com.bryant.itunesmusicsearch.extensions
 
 import android.content.Context
 import android.view.View
-import android.widget.Toast
 import com.bryant.itunesmusicsearch.MainApplication
 import com.bryant.itunesmusicsearch.utils.Utils
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -13,14 +12,10 @@ import kotlinx.coroutines.launch
 val ApplicationContext: Context
     get() = MainApplication.instance.applicationContext
 
-fun isNetworkAvailable(): Boolean {
+fun isNetworkAvailable(offlineAction: () -> Unit): Boolean {
     val result = Utils.checkForInternet(ApplicationContext)
     if (!result) {
-        Toast.makeText(
-            ApplicationContext,
-            "The network is offline, please check your network status...",
-            Toast.LENGTH_SHORT
-        ).show()
+        offlineAction()
     }
     return result
 }

@@ -13,10 +13,10 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bryant.itunesmusicsearch.DataRepository
+import com.bryant.itunesmusicsearch.ListState
 import com.bryant.itunesmusicsearch.R
 import com.bryant.itunesmusicsearch.data.Player
 import com.bryant.itunesmusicsearch.databinding.FragmentSearchBinding
@@ -42,7 +42,7 @@ class SearchFragment : Fragment(), MenuProvider {
     private val searchAdapter by lazy {
         SearchAdapter(object : OnSearchItemClickListener {
             override fun onItemClick(player: Player) {
-                if (isNetworkAvailable()) {
+                if (isNetworkAvailable(offlineAction)) {
                     findNavController().navigate(SearchFragmentDirections.goPlayer(player))
                 }
             }
@@ -52,11 +52,15 @@ class SearchFragment : Fragment(), MenuProvider {
     private val historyAdapter by lazy {
         HistoryAdapter(object : OnHistoryItemClickListener {
             override fun onItemClick(keyword: String) {
-                if (isNetworkAvailable()) {
+                if (isNetworkAvailable(offlineAction)) {
                     searchView.setQuery(keyword, true)
                 }
             }
         })
+    }
+
+    val offlineAction: () -> Unit = {
+        musicViewModel.updateListState(ListState.Offline)
     }
 
     override fun onCreateView(
@@ -88,10 +92,6 @@ class SearchFragment : Fragment(), MenuProvider {
         musicViewModel.searchResult.observe(viewLifecycleOwner) {
             Timber.d("search data update")
             searchAdapter.infoList = it
-            setViewVisibility(binding.rvResult, true)
-            if (it.isEmpty()) {
-                Toast.makeText(ApplicationContext, "No music found", Toast.LENGTH_SHORT).show()
-            }
         }
 
         musicViewModel.historyList.observe(viewLifecycleOwner) {
@@ -101,20 +101,49 @@ class SearchFragment : Fragment(), MenuProvider {
             }
         }
 
-        musicViewModel.errorMessage.observe(viewLifecycleOwner) {
-            Timber.d("errorMessage = $it")
-            Toast.makeText(ApplicationContext, it, Toast.LENGTH_SHORT).show()
+        musicViewModel.listState.observe(viewLifecycleOwner) {
+            handleViewState(it)
         }
 
-        musicViewModel.loading.observe(viewLifecycleOwner, Observer {
-            Timber.d("loading = $it")
-            if (it) {
+    }
+
+    private fun handleViewState(state: ListState) {
+        Timber.d("state = $state")
+        when (state) {
+            is ListState.Searching -> {
                 loading.show(childFragmentManager, TAG)
-            } else {
+            }
+            is ListState.ShowResult -> {
+                setViewVisibility(binding.rvResult, true)
+                setViewVisibility(binding.rvHistory, false)
                 loading.dismiss()
             }
-        })
-
+            is ListState.ShowHistory -> {
+                setViewVisibility(binding.rvResult, false)
+                setViewVisibility(binding.rvHistory, true)
+            }
+            is ListState.Error -> {
+                Toast.makeText(ApplicationContext, state.msg, Toast.LENGTH_SHORT).show()
+            }
+            is ListState.NotFound -> {
+                Toast.makeText(
+                    ApplicationContext,
+                    "No music found, keyword is: ${state.keyword}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            is ListState.Offline -> {
+                Toast.makeText(
+                    ApplicationContext,
+                    "The network is offline, please check your network status...",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            is ListState.Timeout -> {
+                Toast.makeText(ApplicationContext, "socket time out", Toast.LENGTH_SHORT).show()
+                loading.dismiss()
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -129,13 +158,18 @@ class SearchFragment : Fragment(), MenuProvider {
         searchView = searchItem.actionView as SearchView
         searchView.apply {
             setOnQueryTextFocusChangeListener { _, hasFocus ->
-                setViewVisibility(binding.rvHistory, hasFocus)
-                setViewVisibility(binding.rvResult, !hasFocus)
+                musicViewModel.updateListState(
+                    if (hasFocus) {
+                        ListState.ShowHistory
+                    } else {
+                        ListState.ShowResult
+                    }
+                )
             }
 
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(s: String?): Boolean {
-                    if (isNetworkAvailable()) {
+                    if (isNetworkAvailable(offlineAction)) {
                         s?.let {
                             binding.rvResult.scrollToPosition(0)
                             musicViewModel.getSearchResult(it)

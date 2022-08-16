@@ -14,6 +14,7 @@ object RetrofitService {
     private val okhttpClient = OkHttpClient()
         .newBuilder()
         .connectTimeout(ApiConfig.OKHTTP_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(ApiConfig.OKHTTP_TIMEOUT, TimeUnit.SECONDS)
         .build()
 
     private fun retrofit(): Retrofit {

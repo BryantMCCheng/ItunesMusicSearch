@@ -21,6 +21,11 @@ class LoadingDialogFragment : DialogFragment() {
         }
     }
 
+    override fun dismiss() {
+        if (isAdded)
+            super.dismiss()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

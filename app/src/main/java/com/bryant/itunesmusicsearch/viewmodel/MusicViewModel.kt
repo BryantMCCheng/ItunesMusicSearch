@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.bryant.itunesmusicsearch.DataRepository
+import com.bryant.itunesmusicsearch.ListState
 import com.bryant.itunesmusicsearch.data.ResultsItem
 import com.bryant.itunesmusicsearch.db.History
 import com.bryant.itunesmusicsearch.extensions.safeLaunch
@@ -15,34 +16,44 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.net.SocketTimeoutException
 
 class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
     private var _searchResult = MutableLiveData<List<ResultsItem>>()
-    val searchResult: LiveData<List<ResultsItem>> get() = _searchResult
+    val searchResult: LiveData<List<ResultsItem>>
+        get() = _searchResult
 
     private var _historyList = repository.getHistoryInfo().asLiveData()
-    val historyList: LiveData<List<History>> get() = _historyList
+    val historyList: LiveData<List<History>>
+        get() = _historyList
 
-    private var _loading = MutableLiveData<Boolean>()
-    val loading: LiveData<Boolean> get() = _loading
-
-    private var _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> get() = _errorMessage
+    private var _listState = MutableLiveData<ListState>()
+    val listState: LiveData<ListState>
+        get() = _listState
 
     var job: Job? = null
+
+    fun updateListState(state: ListState) {
+        _listState.value = state
+    }
 
     fun getSearchResult(input: String) {
         job = viewModelScope.safeLaunch(exceptionHandler) {
             withContext(Dispatchers.Main) {
-                _loading.value = true
+                updateListState(ListState.Searching)
             }
-            val response = repository.getSearchInfo(input)
             repository.saveHistory(input)
+            val response = repository.getSearchInfo(input)
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     _searchResult.value = response.body()?.results
-                    _loading.value = false
+                    _searchResult.value?.let {
+                        if (it.isEmpty()) {
+                            updateListState(ListState.NotFound(input))
+                        }
+                    }
+                    updateListState(ListState.ShowResult)
                 } else {
                     onError("Error : ${response.message()} ")
                 }
@@ -51,8 +62,7 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     }
 
     private fun onError(message: String) {
-        _errorMessage.value = message
-        _loading.value = false
+        updateListState(ListState.Error(message))
     }
 
     override fun onCleared() {
@@ -62,7 +72,10 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     }
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        onError("Exception handled: ${throwable.localizedMessage}")
+        when (throwable) {
+            is SocketTimeoutException -> updateListState(ListState.Timeout)
+            else -> onError("Exception handled: ${throwable.localizedMessage}")
+        }
     }
 
     /**
