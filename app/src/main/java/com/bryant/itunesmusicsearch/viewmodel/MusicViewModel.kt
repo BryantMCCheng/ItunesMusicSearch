@@ -10,11 +10,9 @@ import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
 import com.bryant.itunesmusicsearch.data.ResultsItem
 import com.bryant.itunesmusicsearch.db.History
-import com.bryant.itunesmusicsearch.extensions.safeLaunch
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.SocketTimeoutException
 
@@ -39,24 +37,20 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     }
 
     fun getSearchResult(input: String) {
-        job = viewModelScope.safeLaunch(exceptionHandler) {
-            withContext(Dispatchers.Main) {
-                updateListState(ListState.Searching)
-            }
+        job = viewModelScope.launch(exceptionHandler) {
+            updateListState(ListState.Searching)
             repository.saveHistory(input)
             val response = repository.getSearchInfo(input)
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    _searchResult.value = response.body()?.results
-                    _searchResult.value?.let {
-                        if (it.isEmpty()) {
-                            updateListState(ListState.NotFound(input))
-                        }
+            if (response.isSuccessful) {
+                _searchResult.value = response.body()?.results
+                _searchResult.value?.let {
+                    if (it.isEmpty()) {
+                        updateListState(ListState.NotFound(input))
                     }
-                    updateListState(ListState.ShowResult)
-                } else {
-                    onError("Error : ${response.message()} ")
                 }
+                updateListState(ListState.ShowResult)
+            } else {
+                onError("Error : ${response.message()} ")
             }
         }
     }

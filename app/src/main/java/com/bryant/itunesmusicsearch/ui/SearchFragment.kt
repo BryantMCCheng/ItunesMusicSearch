@@ -24,6 +24,7 @@ import com.bryant.itunesmusicsearch.extensions.ApplicationContext
 import com.bryant.itunesmusicsearch.extensions.isNetworkAvailable
 import com.bryant.itunesmusicsearch.extensions.setViewVisibility
 import com.bryant.itunesmusicsearch.viewmodel.MusicViewModel
+import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 
 class SearchFragment : Fragment(), MenuProvider {
@@ -33,7 +34,10 @@ class SearchFragment : Fragment(), MenuProvider {
     private lateinit var searchView: SearchView
 
     private val musicViewModel by lazy {
-        ViewModelProvider(this, MusicViewModel.Factory(DataRepository))[MusicViewModel::class.java]
+        ViewModelProvider(
+            this,
+            MusicViewModel.Factory(DataRepository(Dispatchers.IO))
+        )[MusicViewModel::class.java]
     }
     private val loading by lazy {
         LoadingDialogFragment.newInstance()
@@ -104,7 +108,6 @@ class SearchFragment : Fragment(), MenuProvider {
         musicViewModel.listState.observe(viewLifecycleOwner) {
             handleViewState(it)
         }
-
     }
 
     private fun handleViewState(state: ListState) {
