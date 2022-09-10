@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bryant.itunesmusicsearch.data.Player
-import com.bryant.itunesmusicsearch.data.ResultsItem
+import com.bryant.itunesmusicsearch.data.MusicItem
 import com.bryant.itunesmusicsearch.databinding.MusicItemBinding
 import com.bryant.itunesmusicsearch.extensions.ApplicationContext
 import com.bumptech.glide.Glide
@@ -17,7 +17,7 @@ interface OnSearchItemClickListener {
 class SearchAdapter(private val clickListener: OnSearchItemClickListener) :
     RecyclerView.Adapter<SearchAdapter.SearchViewHolder>() {
 
-    var infoList: List<ResultsItem> = arrayListOf()
+    var infoList: List<MusicItem> = arrayListOf()
         set(value) {
             field = value
             notifyDataSetChanged()
@@ -29,7 +29,7 @@ class SearchAdapter(private val clickListener: OnSearchItemClickListener) :
     ) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(infoItem: ResultsItem) {
+        fun bind(infoItem: MusicItem) {
             infoItem.apply {
                 binding.tvArtist.text = artistName
                 binding.tvTrack.text = trackName

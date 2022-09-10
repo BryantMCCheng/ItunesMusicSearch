@@ -2,12 +2,12 @@ package com.bryant.itunesmusicsearch.data
 
 import com.google.gson.annotations.SerializedName
 
-data class SearchResult(
+data class MusicSearchResult(
     @SerializedName("resultCount") val resultCount: Int,
-    @SerializedName("results") val results: List<ResultsItem>
+    @SerializedName("results") val results: List<MusicItem>
 )
 
-data class ResultsItem(
+data class MusicItem(
     @SerializedName("artistId")
     val artistId: Int,
     @SerializedName("artistName")

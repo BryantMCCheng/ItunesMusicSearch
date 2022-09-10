@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
+import com.bryant.itunesmusicsearch.NetworkResult
 import com.bryant.itunesmusicsearch.R
 import com.bryant.itunesmusicsearch.data.Player
 import com.bryant.itunesmusicsearch.databinding.FragmentSearchBinding
@@ -107,6 +108,26 @@ class SearchFragment : Fragment(), MenuProvider {
 
         musicViewModel.listState.observe(viewLifecycleOwner) {
             handleViewState(it)
+        }
+
+        musicViewModel.searchResponse.observe(viewLifecycleOwner) {
+            when(it) {
+                is NetworkResult.Failure -> {
+                    setViewVisibility(binding.rvResult, true)
+                    setViewVisibility(binding.rvHistory, false)
+                    Toast.makeText(ApplicationContext, "eeeeeeeee", Toast.LENGTH_SHORT).show()
+                    loading.dismiss()
+                }
+                is NetworkResult.Loading -> {
+                    loading.show(childFragmentManager, TAG)
+                }
+                is NetworkResult.Success -> {
+                    searchAdapter.infoList = it.data
+                    setViewVisibility(binding.rvResult, true)
+                    setViewVisibility(binding.rvHistory, false)
+                    loading.dismiss()
+                }
+            }
         }
     }
 

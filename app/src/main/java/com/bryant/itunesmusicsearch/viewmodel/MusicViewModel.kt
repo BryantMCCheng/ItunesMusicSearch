@@ -8,21 +8,24 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
-import com.bryant.itunesmusicsearch.data.ResultsItem
+import com.bryant.itunesmusicsearch.NetworkResult
+import com.bryant.itunesmusicsearch.data.MusicItem
 import com.bryant.itunesmusicsearch.db.History
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.SocketTimeoutException
 
 class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
-    private var _searchResult = MutableLiveData<List<ResultsItem>>()
-    val searchResult: LiveData<List<ResultsItem>>
+    private var _searchResponse = MutableLiveData<NetworkResult<List<MusicItem>>>()
+    val searchResponse: LiveData<NetworkResult<List<MusicItem>>> = _searchResponse
+
+    private var _searchResult = MutableLiveData<List<MusicItem>>()
+    val searchResult: LiveData<List<MusicItem>>
         get() = _searchResult
 
-    private var _historyList = repository.getHistoryInfo().asLiveData()
+    private var _historyList = repository.getHistory().asLiveData()
     val historyList: LiveData<List<History>>
         get() = _historyList
 
@@ -30,28 +33,30 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     val listState: LiveData<ListState>
         get() = _listState
 
-    var job: Job? = null
-
     fun updateListState(state: ListState) {
         _listState.value = state
     }
 
     fun getSearchResult(input: String) {
-        job = viewModelScope.launch(exceptionHandler) {
-            updateListState(ListState.Searching)
+        viewModelScope.launch(exceptionHandler) {
+//            updateListState(ListState.Searching)
             repository.saveHistory(input)
-            val response = repository.getSearchInfo(input)
-            if (response.isSuccessful) {
-                _searchResult.value = response.body()?.results
-                _searchResult.value?.let {
-                    if (it.isEmpty()) {
-                        updateListState(ListState.NotFound(input))
-                    }
-                }
-                updateListState(ListState.ShowResult)
-            } else {
-                onError("Error : ${response.message()} ")
+            repository.getSearchInfo(input).collect {
+                Timber.d("collect, current thread = ${Thread.currentThread()}")
+                _searchResponse.value = it
             }
+//            val response = repository.getSearchInfo(input)
+//            if (response.isSuccessful) {
+//                _searchResult.value = response.body()?.results
+//                _searchResult.value?.let {
+//                    if (it.isEmpty()) {
+//                        updateListState(ListState.NotFound(input))
+//                    }
+//                }
+//                updateListState(ListState.ShowResult)
+//            } else {
+//                onError("Error : ${response.message()} ")
+//            }
         }
     }
 
@@ -62,7 +67,6 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         Timber.e("onCleared")
-        job?.cancel()
     }
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->

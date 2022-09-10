@@ -1,13 +1,18 @@
 package com.bryant.itunesmusicsearch.apis
 
-import com.bryant.itunesmusicsearch.data.SearchResult
+import com.bryant.itunesmusicsearch.data.MusicSearchResult
 import okhttp3.OkHttpClient
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
+
+object ApiConfig {
+    const val URL = "https://itunes.apple.com/"
+    const val SEARCH = "/search?media=music"
+    const val OKHTTP_TIMEOUT = 10L
+}
 
 object RetrofitService {
 
@@ -34,5 +39,5 @@ interface SearchApi {
     @GET(ApiConfig.SEARCH)
     suspend fun getSearchInfo(
         @Query(value = "term", encoded = true) input: String
-    ): Response<SearchResult>
+    ): MusicSearchResult
 }
