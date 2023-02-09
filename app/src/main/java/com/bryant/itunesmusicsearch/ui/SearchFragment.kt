@@ -14,6 +14,8 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
@@ -26,6 +28,8 @@ import com.bryant.itunesmusicsearch.extensions.isNetworkAvailable
 import com.bryant.itunesmusicsearch.extensions.setViewVisibility
 import com.bryant.itunesmusicsearch.viewmodel.MusicViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class SearchFragment : Fragment(), MenuProvider {
@@ -110,22 +114,26 @@ class SearchFragment : Fragment(), MenuProvider {
             handleViewState(it)
         }
 
-        musicViewModel.searchResponse.observe(viewLifecycleOwner) {
-            when(it) {
-                is NetworkResult.Failure -> {
-                    setViewVisibility(binding.rvResult, true)
-                    setViewVisibility(binding.rvHistory, false)
-                    Toast.makeText(ApplicationContext, "eeeeeeeee", Toast.LENGTH_SHORT).show()
-                    loading.dismiss()
-                }
-                is NetworkResult.Loading -> {
-                    loading.show(childFragmentManager, TAG)
-                }
-                is NetworkResult.Success -> {
-                    searchAdapter.infoList = it.data
-                    setViewVisibility(binding.rvResult, true)
-                    setViewVisibility(binding.rvHistory, false)
-                    loading.dismiss()
+        lifecycleScope.launch {
+            musicViewModel.searchResponse.flowWithLifecycle(lifecycle).collect {
+                when (it) {
+                    is NetworkResult.Failure -> {
+                        setViewVisibility(binding.rvResult, true)
+                        setViewVisibility(binding.rvHistory, false)
+                        Toast.makeText(ApplicationContext, "eeeeeeeee", Toast.LENGTH_SHORT).show()
+                        loading.dismiss()
+                    }
+                    is NetworkResult.Loading -> {
+                        if (it.isLoading) {
+                            loading.show(childFragmentManager, TAG)
+                        }
+                    }
+                    is NetworkResult.Success -> {
+                        searchAdapter.infoList = it.data
+                        setViewVisibility(binding.rvResult, true)
+                        setViewVisibility(binding.rvHistory, false)
+                        loading.dismiss()
+                    }
                 }
             }
         }

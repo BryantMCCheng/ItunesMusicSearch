@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.bryant.itunesmusicsearch.R
 
 class LoadingDialogFragment : DialogFragment() {
@@ -24,6 +25,11 @@ class LoadingDialogFragment : DialogFragment() {
     override fun dismiss() {
         if (isAdded)
             super.dismiss()
+    }
+
+    override fun show(manager: FragmentManager, tag: String?) {
+        if (!isAdded)
+            super.show(manager, tag)
     }
 
     override fun onCreateView(

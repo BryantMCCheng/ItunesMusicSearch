@@ -12,14 +12,17 @@ import com.bryant.itunesmusicsearch.NetworkResult
 import com.bryant.itunesmusicsearch.data.MusicItem
 import com.bryant.itunesmusicsearch.db.History
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.SocketTimeoutException
 
 class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
-    private var _searchResponse = MutableLiveData<NetworkResult<List<MusicItem>>>()
-    val searchResponse: LiveData<NetworkResult<List<MusicItem>>> = _searchResponse
+    private var _searchResponse =
+        MutableStateFlow<NetworkResult<List<MusicItem>>>(NetworkResult.Loading(false))
+    val searchResponse: StateFlow<NetworkResult<List<MusicItem>>> = _searchResponse
 
     private var _searchResult = MutableLiveData<List<MusicItem>>()
     val searchResult: LiveData<List<MusicItem>>
