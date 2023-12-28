@@ -7,7 +7,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -20,9 +19,9 @@ import com.bryant.itunesmusicsearch.ListState
 import com.bryant.itunesmusicsearch.R
 import com.bryant.itunesmusicsearch.data.Player
 import com.bryant.itunesmusicsearch.databinding.FragmentSearchBinding
-import com.bryant.itunesmusicsearch.extensions.ApplicationContext
 import com.bryant.itunesmusicsearch.extensions.isNetworkAvailable
 import com.bryant.itunesmusicsearch.extensions.setViewVisibility
+import com.bryant.itunesmusicsearch.utils.Utils
 import com.bryant.itunesmusicsearch.viewmodel.MusicViewModel
 import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
@@ -35,8 +34,7 @@ class SearchFragment : Fragment(), MenuProvider {
 
     private val musicViewModel by lazy {
         ViewModelProvider(
-            this,
-            MusicViewModel.Factory(DataRepository(Dispatchers.IO))
+            this, MusicViewModel.Factory(DataRepository(Dispatchers.IO))
         )[MusicViewModel::class.java]
     }
     private val loading by lazy {
@@ -63,28 +61,30 @@ class SearchFragment : Fragment(), MenuProvider {
         })
     }
 
-    val offlineAction: () -> Unit = {
+    private val offlineAction: () -> Unit = {
         musicViewModel.updateListState(ListState.Offline)
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        activity?.let { activity ->
+            val menuHost: MenuHost = activity
+            menuHost.addMenuProvider(
+                this@SearchFragment, viewLifecycleOwner, Lifecycle.State.RESUMED
+            )
+        }
         return binding.root
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setViews()
+        setupViews()
+        setupObservers()
     }
 
-    private fun setViews() {
+    private fun setupViews() {
         binding.rvResult.apply {
             adapter = searchAdapter
         }
@@ -92,7 +92,9 @@ class SearchFragment : Fragment(), MenuProvider {
         binding.rvHistory.apply {
             adapter = historyAdapter
         }
+    }
 
+    private fun setupObservers() {
         musicViewModel.searchResult.observe(viewLifecycleOwner) {
             Timber.d("search data update")
             searchAdapter.infoList = it
@@ -116,34 +118,34 @@ class SearchFragment : Fragment(), MenuProvider {
             is ListState.Searching -> {
                 loading.show(childFragmentManager, TAG)
             }
+
             is ListState.ShowResult -> {
                 setViewVisibility(binding.rvResult, true)
                 setViewVisibility(binding.rvHistory, false)
                 loading.dismiss()
             }
+
             is ListState.ShowHistory -> {
                 setViewVisibility(binding.rvResult, false)
                 setViewVisibility(binding.rvHistory, true)
             }
+
             is ListState.Error -> {
-                Toast.makeText(ApplicationContext, state.msg, Toast.LENGTH_SHORT).show()
+                Utils.showToast(context, state.msg)
             }
+
             is ListState.NotFound -> {
-                Toast.makeText(
-                    ApplicationContext,
-                    "No music found, keyword is: ${state.keyword}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Utils.showToast(context, "No music found, keyword is: ${state.keyword}")
             }
+
             is ListState.Offline -> {
-                Toast.makeText(
-                    ApplicationContext,
-                    "The network is offline, please check your network status...",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Utils.showToast(
+                    context, "The network is offline, please check your network status..."
+                )
             }
+
             is ListState.Timeout -> {
-                Toast.makeText(ApplicationContext, "socket time out", Toast.LENGTH_SHORT).show()
+                Utils.showToast(context, "socket time out")
                 loading.dismiss()
             }
         }
@@ -195,6 +197,6 @@ class SearchFragment : Fragment(), MenuProvider {
     }
 
     companion object {
-        private const val TAG = "SearchFragment"
+        private val TAG = SearchFragment::class.java.simpleName
     }
 }

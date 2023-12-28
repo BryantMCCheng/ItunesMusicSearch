@@ -19,18 +19,15 @@ import java.net.SocketTimeoutException
 class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
     private var _searchResult = MutableLiveData<List<ResultsItem>>()
-    val searchResult: LiveData<List<ResultsItem>>
-        get() = _searchResult
+    val searchResult: LiveData<List<ResultsItem>> get() = _searchResult
 
     private var _historyList = repository.getHistoryInfo().asLiveData()
-    val historyList: LiveData<List<History>>
-        get() = _historyList
+    val historyList: LiveData<List<History>> get() = _historyList
 
     private var _listState = MutableLiveData<ListState>()
-    val listState: LiveData<ListState>
-        get() = _listState
+    val listState: LiveData<ListState> get() = _listState
 
-    var job: Job? = null
+    private var job: Job? = null
 
     fun updateListState(state: ListState) {
         _listState.value = state
@@ -78,8 +75,7 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
     class Factory(private val repository: DataRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MusicViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return MusicViewModel(repository) as T
+                @Suppress("UNCHECKED_CAST") return MusicViewModel(repository) as T
             }
             throw IllegalArgumentException("Unable to construct viewmodel")
         }

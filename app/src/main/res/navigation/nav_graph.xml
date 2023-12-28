@@ -23,8 +23,7 @@
 
         <argument
             android:name="player"
-            android:defaultValue="@null"
             app:argType="com.bryant.itunesmusicsearch.data.Player"
-            app:nullable="true" />
+            app:nullable="false" />
     </fragment>
 </navigation>

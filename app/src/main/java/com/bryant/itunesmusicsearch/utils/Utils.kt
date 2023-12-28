@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.widget.Toast
 
 class Utils {
     companion object {
@@ -44,8 +45,13 @@ class Utils {
                 // if the android version is below M
                 @Suppress("DEPRECATION") val networkInfo =
                     connectivityManager.activeNetworkInfo ?: return false
-                @Suppress("DEPRECATION")
-                return networkInfo.isConnected
+                @Suppress("DEPRECATION") return networkInfo.isConnected
+            }
+        }
+
+        fun showToast(context: Context?, message: String) {
+            context?.let {
+                Toast.makeText(it.applicationContext, message, Toast.LENGTH_SHORT).show()
             }
         }
     }
