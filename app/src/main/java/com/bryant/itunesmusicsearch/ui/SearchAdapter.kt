@@ -24,33 +24,26 @@ class SearchAdapter(private val clickListener: OnSearchItemClickListener) :
         }
 
     class SearchViewHolder(
-        private val binding: MusicItemBinding,
-        private val clickListener: OnSearchItemClickListener
-    ) :
-        RecyclerView.ViewHolder(binding.root) {
+        private val binding: MusicItemBinding, private val clickListener: OnSearchItemClickListener
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(infoItem: ResultsItem) {
-            infoItem.apply {
-                binding.tvArtist.text = artistName
-                binding.tvTrack.text = trackName
+            binding.apply {
+                tvArtist.text = infoItem.artistName
+                tvTrack.text = infoItem.trackName
                 val url: String = when {
-                    artworkUrl100.isNotEmpty() -> artworkUrl100
-                    artworkUrl60.isNotEmpty() -> artworkUrl60
-                    artworkUrl30.isNotEmpty() -> artworkUrl30
+                    infoItem.artworkUrl100.isNotEmpty() -> infoItem.artworkUrl100
+                    infoItem.artworkUrl60.isNotEmpty() -> infoItem.artworkUrl60
+                    infoItem.artworkUrl30.isNotEmpty() -> infoItem.artworkUrl30
                     else -> ""
                 }
                 if (url != "") {
-                    Glide.with(ApplicationContext)
-                        .load(url)
-                        .into(binding.ivCover)
+                    Glide.with(ApplicationContext).load(url).into(ivCover)
                 }
-                binding.root.setOnClickListener {
+                root.setOnClickListener {
                     clickListener.onItemClick(
                         Player(
-                            url,
-                            trackName,
-                            artistName,
-                            previewUrl
+                            url, infoItem.trackName, infoItem.artistName, infoItem.previewUrl
                         )
                     )
                 }
@@ -59,14 +52,8 @@ class SearchAdapter(private val clickListener: OnSearchItemClickListener) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder {
-        return SearchViewHolder(
-            MusicItemBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            ),
-            clickListener
-        )
+        val inflater = MusicItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return SearchViewHolder(inflater, clickListener)
     }
 
     override fun onBindViewHolder(holder: SearchViewHolder, position: Int) {
