@@ -1,12 +1,12 @@
-package com.bryant.itunesmusicsearch.ui
+package com.bryant.itunesmusicsearch.ui.search
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.bryant.itunesmusicsearch.data.Player
-import com.bryant.itunesmusicsearch.data.ResultsItem
+import com.bryant.itunesmusicsearch.ui.player.Player
+import com.bryant.itunesmusicsearch.model.ResultsItem
 import com.bryant.itunesmusicsearch.databinding.MusicItemBinding
-import com.bryant.itunesmusicsearch.extensions.ApplicationContext
+import com.bryant.itunesmusicsearch.utils.ApplicationContext
 import com.bumptech.glide.Glide
 import timber.log.Timber
 

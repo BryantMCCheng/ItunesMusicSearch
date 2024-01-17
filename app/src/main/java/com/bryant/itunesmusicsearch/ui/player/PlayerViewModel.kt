@@ -1,9 +1,8 @@
-package com.bryant.itunesmusicsearch.viewmodel
+package com.bryant.itunesmusicsearch.ui.player
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.bryant.itunesmusicsearch.data.Player
 
 class PlayerViewModel : ViewModel() {
     private val _player = MutableLiveData<Player>()

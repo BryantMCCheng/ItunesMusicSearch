@@ -1,10 +1,10 @@
-package com.bryant.itunesmusicsearch.ui
+package com.bryant.itunesmusicsearch.ui.history
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bryant.itunesmusicsearch.databinding.HistoryItemBinding
-import com.bryant.itunesmusicsearch.db.History
+import com.bryant.itunesmusicsearch.data.history.History
 import timber.log.Timber
 
 interface OnHistoryItemClickListener {

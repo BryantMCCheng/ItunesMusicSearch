@@ -1,8 +1,8 @@
-package com.bryant.itunesmusicsearch
+package com.bryant.itunesmusicsearch.data
 
 import com.bryant.itunesmusicsearch.apis.RetrofitService
-import com.bryant.itunesmusicsearch.db.History
-import com.bryant.itunesmusicsearch.db.HistoryRoomDataBase
+import com.bryant.itunesmusicsearch.data.history.History
+import com.bryant.itunesmusicsearch.data.history.HistoryRoomDataBase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

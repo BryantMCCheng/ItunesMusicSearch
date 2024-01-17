@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.ui
+package com.bryant.itunesmusicsearch
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

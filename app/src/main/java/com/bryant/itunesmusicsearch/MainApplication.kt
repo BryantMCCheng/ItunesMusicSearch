@@ -1,7 +1,7 @@
 package com.bryant.itunesmusicsearch
 
 import android.app.Application
-import com.bryant.itunesmusicsearch.log.MultiTagTree
+import com.bryant.itunesmusicsearch.utils.log.MultiTagTree
 import timber.log.Timber
 
 class MainApplication : Application() {

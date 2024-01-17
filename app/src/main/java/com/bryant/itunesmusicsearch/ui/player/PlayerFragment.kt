@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.ui
+package com.bryant.itunesmusicsearch.ui.player
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,10 +10,9 @@ import androidx.fragment.app.viewModels
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.fragment.findNavController
-import com.bryant.itunesmusicsearch.data.Player
 import com.bryant.itunesmusicsearch.databinding.FragmentPlayerBinding
-import com.bryant.itunesmusicsearch.extensions.ApplicationContext
-import com.bryant.itunesmusicsearch.viewmodel.PlayerViewModel
+import com.bryant.itunesmusicsearch.ui.LoadingDialogFragment
+import com.bryant.itunesmusicsearch.utils.ApplicationContext
 import com.bumptech.glide.Glide
 import timber.log.Timber
 

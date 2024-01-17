@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.log
+package com.bryant.itunesmusicsearch.utils.log
 
 import timber.log.Timber
 

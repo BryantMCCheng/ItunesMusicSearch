@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.db
+package com.bryant.itunesmusicsearch.data.history
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

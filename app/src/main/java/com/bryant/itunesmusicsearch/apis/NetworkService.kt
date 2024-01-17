@@ -1,6 +1,6 @@
 package com.bryant.itunesmusicsearch.apis
 
-import com.bryant.itunesmusicsearch.data.SearchResult
+import com.bryant.itunesmusicsearch.model.SearchResult
 import okhttp3.OkHttpClient
 import retrofit2.Response
 import retrofit2.Retrofit

@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.data
+package com.bryant.itunesmusicsearch.model
 
 import com.google.gson.annotations.SerializedName
 

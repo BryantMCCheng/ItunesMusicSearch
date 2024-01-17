@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.viewmodel
+package com.bryant.itunesmusicsearch.ui.search
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
-import com.bryant.itunesmusicsearch.data.ResultsItem
-import com.bryant.itunesmusicsearch.db.History
+import com.bryant.itunesmusicsearch.data.DataRepository
+import com.bryant.itunesmusicsearch.data.history.History
+import com.bryant.itunesmusicsearch.model.ResultsItem
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -29,11 +29,23 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
 
     private var job: Job? = null
 
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        when (throwable) {
+            is SocketTimeoutException -> updateListState(ListState.Timeout)
+            else -> onError("Exception handled: ${throwable.localizedMessage}")
+        }
+    }
+
+    private fun onError(message: String) {
+        updateListState(ListState.Error(message))
+    }
+
     fun updateListState(state: ListState) {
         _listState.value = state
     }
 
     fun getSearchResult(input: String) {
+        job?.cancel()
         job = viewModelScope.launch(exceptionHandler) {
             updateListState(ListState.Searching)
             repository.saveHistory(input)
@@ -45,15 +57,11 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
                         updateListState(ListState.NotFound(input))
                     }
                 }
-                updateListState(ListState.ShowResult)
+                updateListState(ListState.ShowSearchResult)
             } else {
-                onError("Error : ${response.message()} ")
+                onError("Error: ${response.message()} ")
             }
         }
-    }
-
-    private fun onError(message: String) {
-        updateListState(ListState.Error(message))
     }
 
     override fun onCleared() {
@@ -62,16 +70,6 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
         job?.cancel()
     }
 
-    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        when (throwable) {
-            is SocketTimeoutException -> updateListState(ListState.Timeout)
-            else -> onError("Exception handled: ${throwable.localizedMessage}")
-        }
-    }
-
-    /**
-     * Factory for constructing MusicViewModel with parameter
-     */
     class Factory(private val repository: DataRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MusicViewModel::class.java)) {

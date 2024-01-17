@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/SearchFragment"
-        android:name="com.bryant.itunesmusicsearch.ui.SearchFragment"
+        android:name="com.bryant.itunesmusicsearch.ui.search.SearchFragment"
         android:label="@string/search_fragment_label"
         tools:layout="@layout/fragment_search">
 
@@ -17,13 +17,13 @@
     </fragment>
     <fragment
         android:id="@+id/PlayerFragment"
-        android:name="com.bryant.itunesmusicsearch.ui.PlayerFragment"
+        android:name="com.bryant.itunesmusicsearch.ui.player.PlayerFragment"
         android:label="@string/player_fragment_label"
         tools:layout="@layout/fragment_player">
 
         <argument
             android:name="player"
-            app:argType="com.bryant.itunesmusicsearch.data.Player"
+            app:argType="com.bryant.itunesmusicsearch.ui.player.Player"
             app:nullable="false" />
     </fragment>
 </navigation>

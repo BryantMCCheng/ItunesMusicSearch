@@ -1,4 +1,4 @@
-package com.bryant.itunesmusicsearch.data
+package com.bryant.itunesmusicsearch.ui.player
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

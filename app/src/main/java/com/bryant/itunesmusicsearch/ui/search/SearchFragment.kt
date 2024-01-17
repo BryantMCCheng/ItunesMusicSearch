@@ -1,5 +1,7 @@
-package com.bryant.itunesmusicsearch.ui
+package com.bryant.itunesmusicsearch.ui.search
 
+import HistoryScreen
+import SearchResultScreen
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -8,21 +10,29 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.bryant.itunesmusicsearch.DataRepository
 import com.bryant.itunesmusicsearch.ListState
 import com.bryant.itunesmusicsearch.R
-import com.bryant.itunesmusicsearch.data.Player
+import com.bryant.itunesmusicsearch.data.DataRepository
 import com.bryant.itunesmusicsearch.databinding.FragmentSearchBinding
-import com.bryant.itunesmusicsearch.extensions.isNetworkAvailable
-import com.bryant.itunesmusicsearch.extensions.setViewVisibility
-import com.bryant.itunesmusicsearch.utils.Utils
-import com.bryant.itunesmusicsearch.viewmodel.MusicViewModel
+import com.bryant.itunesmusicsearch.ui.history.HistoryAdapter
+import com.bryant.itunesmusicsearch.ui.LoadingDialogFragment
+import com.bryant.itunesmusicsearch.ui.history.OnHistoryItemClickListener
+import com.bryant.itunesmusicsearch.ui.player.Player
+import com.bryant.itunesmusicsearch.ui.theme.MyApplicationTheme
+import com.bryant.itunesmusicsearch.utils.isNetworkAvailable
+import com.bryant.itunesmusicsearch.utils.showToast
 import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 
@@ -69,18 +79,54 @@ class SearchFragment : Fragment(), MenuProvider {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSearchBinding.inflate(inflater, container, false)
+        setupComposeScreen()
+        setupMenuProvider()
+        return binding.root
+    }
+
+    private fun setupComposeScreen() {
+        binding.composeContainer.apply {
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
+            setContent {
+                MyApplicationTheme {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        val listState by musicViewModel.listState.observeAsState()
+                        when (listState) {
+                            ListState.ShowHistory -> {
+                                HistoryScreen(musicViewModel = musicViewModel)
+                            }
+
+                            ListState.ShowSearchResult -> {
+                                SearchResultScreen(
+                                    musicViewModel = musicViewModel,
+                                    navController = findNavController()
+                                )
+                            }
+
+                            else -> {
+                                // do nothing
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupMenuProvider() {
         activity?.let { activity ->
             val menuHost: MenuHost = activity
             menuHost.addMenuProvider(
                 this@SearchFragment, viewLifecycleOwner, Lifecycle.State.RESUMED
             )
         }
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupViews()
+//        setupViews()
         setupObservers()
     }
 
@@ -95,17 +141,17 @@ class SearchFragment : Fragment(), MenuProvider {
     }
 
     private fun setupObservers() {
-        musicViewModel.searchResult.observe(viewLifecycleOwner) {
-            Timber.d("search data update")
-            searchAdapter.infoList = it
-        }
-
-        musicViewModel.historyList.observe(viewLifecycleOwner) {
-            Timber.d("history data update")
-            it?.let {
-                historyAdapter.historyList = it.reversed()
-            }
-        }
+//        searchViewModel.searchResult.observe(viewLifecycleOwner) {
+//            Timber.d("search data update")
+//            searchAdapter.infoList = it
+//        }
+//
+//        searchViewModel.historyList.observe(viewLifecycleOwner) {
+//            Timber.d("history data update")
+//            it?.let {
+//                historyAdapter.historyList = it.reversed()
+//            }
+//        }
 
         musicViewModel.listState.observe(viewLifecycleOwner) {
             handleViewState(it)
@@ -114,40 +160,44 @@ class SearchFragment : Fragment(), MenuProvider {
 
     private fun handleViewState(state: ListState) {
         Timber.d("state = $state")
+
         when (state) {
             is ListState.Searching -> {
                 loading.show(childFragmentManager, TAG)
             }
 
-            is ListState.ShowResult -> {
-                setViewVisibility(binding.rvResult, true)
-                setViewVisibility(binding.rvHistory, false)
+            is ListState.ShowSearchResult -> {
+//                updateVisibility(binding.rvResult, true)
+//                updateVisibility(binding.rvHistory, false)
+                restoreSearchView()
                 loading.dismiss()
             }
 
             is ListState.ShowHistory -> {
-                setViewVisibility(binding.rvResult, false)
-                setViewVisibility(binding.rvHistory, true)
+//                updateVisibility(binding.rvResult, false)
+//                updateVisibility(binding.rvHistory, true)
             }
 
-            is ListState.Error -> {
-                Utils.showToast(context, state.msg)
-            }
-
-            is ListState.NotFound -> {
-                Utils.showToast(context, "No music found, keyword is: ${state.keyword}")
-            }
-
-            is ListState.Offline -> {
-                Utils.showToast(
-                    context, "The network is offline, please check your network status..."
+            is ListState.Error, is ListState.NotFound, is ListState.Offline, is ListState.Timeout -> {
+                showToast(
+                    context, when (state) {
+                        is ListState.Error -> state.msg
+                        is ListState.NotFound -> "No music found, keyword is: ${state.keyword}"
+                        is ListState.Offline -> "The network is offline, please check your network status..."
+                        is ListState.Timeout -> "socket time out"
+                        else -> ""
+                    }
                 )
-            }
-
-            is ListState.Timeout -> {
-                Utils.showToast(context, "socket time out")
+                restoreSearchView()
                 loading.dismiss()
             }
+        }
+    }
+
+    private fun restoreSearchView() {
+        if (!searchView.isIconified) {
+            searchView.isIconified = true;
+            searchView.onActionViewCollapsed()
         }
     }
 
@@ -159,15 +209,14 @@ class SearchFragment : Fragment(), MenuProvider {
 
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menuInflater.inflate(R.menu.menu_main, menu)
-        val searchItem = menu.findItem(R.id.action_search)
-        searchView = searchItem.actionView as SearchView
+        searchView = menu.findItem(R.id.action_search).actionView as SearchView
         searchView.apply {
             setOnQueryTextFocusChangeListener { _, hasFocus ->
                 musicViewModel.updateListState(
                     if (hasFocus) {
                         ListState.ShowHistory
                     } else {
-                        ListState.ShowResult
+                        ListState.ShowSearchResult
                     }
                 )
             }
@@ -176,7 +225,7 @@ class SearchFragment : Fragment(), MenuProvider {
                 override fun onQueryTextSubmit(s: String?): Boolean {
                     if (isNetworkAvailable(offlineAction)) {
                         s?.let {
-                            binding.rvResult.scrollToPosition(0)
+//                            binding.rvResult.scrollToPosition(0)
                             musicViewModel.getSearchResult(it)
                             searchView.clearFocus()
                         }

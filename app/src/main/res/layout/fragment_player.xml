@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:focusable="true"
         android:keepScreenOn="true"
-        tools:context=".ui.PlayerFragment">
+        tools:context=".ui.player.PlayerFragment">
 
         <ImageView
             android:id="@+id/iv_cover"
