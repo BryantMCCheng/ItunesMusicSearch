@@ -18,6 +18,7 @@ Users can input keywords to find music to try.
 - ExoPlayer
 - Timber
 - Flow
+- Compose
 
 ### Link
 - [Demo](https://www.youtube.com/watch?v=APRmD7epF0c)
