@@ -25,4 +25,8 @@ class DataRepository(private val dispatcher: CoroutineDispatcher = Dispatchers.I
     suspend fun saveHistory(keyword: String) = withContext(dispatcher) {
         dbManager.historyDao().insertHistory(History(keyword))
     }
+
+    suspend fun removeHistoryByKeyword(keyword: String) = withContext(dispatcher) {
+        dbManager.historyDao().removeHistoryByKeyword(keyword)
+    }
 }

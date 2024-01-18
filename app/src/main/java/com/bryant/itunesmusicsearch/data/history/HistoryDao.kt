@@ -13,4 +13,7 @@ interface HistoryDao {
 
     @Query("SELECT * FROM history_table")
     fun getHistory(): Flow<List<History>>
+
+    @Query("DELETE FROM history_table WHERE keyword = :keyword")
+    suspend fun removeHistoryByKeyword(keyword: String): Int
 }

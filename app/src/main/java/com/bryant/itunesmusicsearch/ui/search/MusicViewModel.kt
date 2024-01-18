@@ -64,6 +64,12 @@ class MusicViewModel(private val repository: DataRepository) : ViewModel() {
         }
     }
 
+    fun removeHistory(keyword: String) {
+        viewModelScope.launch {
+            repository.removeHistoryByKeyword(keyword)
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         Timber.e("onCleared")
