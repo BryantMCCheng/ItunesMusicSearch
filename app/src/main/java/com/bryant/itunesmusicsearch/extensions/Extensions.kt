@@ -2,37 +2,12 @@ package com.bryant.itunesmusicsearch.extensions
 
 import android.content.Context
 import android.view.View
-import com.bryant.itunesmusicsearch.MainApplication
-import com.bryant.itunesmusicsearch.utils.Utils
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import android.view.inputmethod.InputMethodManager
 
-val ApplicationContext: Context
-    get() = MainApplication.instance.applicationContext
-
-fun isNetworkAvailable(offlineAction: () -> Unit): Boolean {
-    val result = Utils.checkForInternet(ApplicationContext)
-    if (!result) {
-        offlineAction()
-    }
-    return result
-}
-
-fun setViewVisibility(view: View, show: Boolean) {
-    view.visibility = if (show) View.VISIBLE else View.GONE
-}
-
-fun CoroutineScope.safeLaunch(
-    exceptionHandler: CoroutineExceptionHandler = coroutineExceptionHandler,
-    launchBody: suspend () -> Unit
-): Job {
-    return this.launch(exceptionHandler) {
-        launchBody.invoke()
-    }
-}
-
-val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
-    throwable.printStackTrace()
+/**
+ * Hides the soft keyboard.
+ */
+fun View.hideKeyboard() {
+    val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    imm.hideSoftInputFromWindow(windowToken, 0)
 }
